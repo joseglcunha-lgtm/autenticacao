@@ -97,9 +97,12 @@ function Auth({ redirectAfterAuth }: AuthProps = {}) {
         return;
       }
       await signIn(provider, { redirectTo: redirect });
+      // Sinaliza ao dashboard para exibir a tela de boas-vindas.
+      sessionStorage.setItem("auth:welcome", "1");
       // On success the browser is redirected away by the OAuth flow.
       setPending(null);
     } catch (error) {
+      sessionStorage.removeItem("auth:welcome");
       console.error(`${provider} sign-in error:`, error);
       const raw =
         error instanceof Error

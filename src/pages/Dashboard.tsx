@@ -7,7 +7,6 @@ import { Github, LogOut, ShieldCheck } from "lucide-react";
 import { useQuery } from "convex/react";
 import { useNavigate } from "react-router";
 import { useEffect, useRef, useState } from "react";
-import { toast } from "sonner";
 
 const providerLabels: Record<string, string> = {
   google: "Google",
@@ -55,20 +54,18 @@ export default function Dashboard() {
   // Mensagem de boas-vindas exibida uma vez, ao chegar autenticado.
   useEffect(() => {
     if (!user || greetedRef.current) return;
+    // A tela de boas-vindas só aparece quando o usuário chega vindo do
+    // fluxo de login (flag definida em /auth antes do redirect).
+    if (sessionStorage.getItem("auth:welcome") !== "1") return;
     greetedRef.current = true;
+    sessionStorage.removeItem("auth:welcome");
     setShowGreeting(true);
-    const provider = providerData?.providers?.[0];
-    toast.success("Obrigado por logar!!!", {
-      description: provider
-        ? `Você entrou via ${providerLabels[provider] ?? provider}.`
-        : "Sessão iniciada com sucesso.",
-    });
-  }, [user, providerData]);
+  }, [user]);
 
-  // A faixa de boas-vindas desaparece após alguns segundos.
+  // A tela de boas-vindas fecha automaticamente após alguns segundos.
   useEffect(() => {
     if (!showGreeting) return;
-    const timer = setTimeout(() => setShowGreeting(false), 6000);
+    const timer = setTimeout(() => setShowGreeting(false), 5000);
     return () => clearTimeout(timer);
   }, [showGreeting]);
 
@@ -103,27 +100,27 @@ export default function Dashboard() {
 
           {showGreeting && (
             <motion.div
-              initial={{ opacity: 0, y: -6 }}
-              animate={{ opacity: 1, y: 0 }}
+              initial={{ opacity: 0, scale: 0.98 }}
+              animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0 }}
-              transition={{ duration: 0.4, ease: "easeOut" }}
-              className="mt-6 flex items-center gap-3 rounded-md border bg-muted/40 px-4 py-3"
+              transition={{ duration: 0.35, ease: "easeOut" }}
+              className="mt-6 flex flex-col items-start gap-2 rounded-md border bg-muted/40 px-6 py-8 sm:items-center sm:text-center"
             >
               {LatestProviderIcon ? (
-                <LatestProviderIcon className="size-4 shrink-0" />
+                <LatestProviderIcon className="size-6 shrink-0" />
               ) : (
                 <ShieldCheck
-                  className="size-4 shrink-0 text-muted-foreground"
+                  className="size-6 shrink-0 text-muted-foreground"
                   strokeWidth={1.5}
                 />
               )}
-              <p className="text-sm">
-                <span className="font-semibold">Obrigado por logar!!!</span>{" "}
-                <span className="text-muted-foreground">
-                  {latestProvider
-                    ? `Você entrou via ${providerLabels[latestProvider] ?? latestProvider}.`
-                    : "Sessão iniciada com sucesso."}
-                </span>
+              <p className="text-2xl font-bold tracking-tight">
+                Obrigado por logar!!!
+              </p>
+              <p className="text-sm text-muted-foreground">
+                {latestProvider
+                  ? `Você entrou via ${providerLabels[latestProvider] ?? latestProvider}.`
+                  : "Sessão iniciada com sucesso."}
               </p>
             </motion.div>
           )}
