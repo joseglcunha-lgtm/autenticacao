@@ -84,6 +84,7 @@ function Auth({ redirectAfterAuth }: AuthProps = {}) {
       if (isEmbedded) {
         // Recarrega o preview em nova aba, levando o usuário para /auth
         // fora do iframe. O fluxo OAuth continua lá, em nível superior.
+        sessionStorage.setItem("auth:welcome", "1");
         const popup = window.open(
           `${window.location.origin}/auth?mode=${mode}&provider=${provider}`,
           "_blank",

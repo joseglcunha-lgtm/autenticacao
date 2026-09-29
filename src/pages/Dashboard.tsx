@@ -54,11 +54,20 @@ export default function Dashboard() {
   // Mensagem de boas-vindas exibida uma vez, ao chegar autenticado.
   useEffect(() => {
     if (!user || greetedRef.current) return;
-    // A tela de boas-vindas só aparece quando o usuário chega vindo do
-    // fluxo de login (flag definida em /auth antes do redirect).
-    if (sessionStorage.getItem("auth:welcome") !== "1") return;
+    // A tela aparece quando o usuário acaba de completar um login: seja pela
+    // flag gravada em /auth, seja pelo ?code= que o Convex emite no redirect
+    // pós-autenticação.
+    const params = new URLSearchParams(window.location.search);
+    const justLoggedIn =
+      sessionStorage.getItem("auth:welcome") === "1" || params.has("code");
+    if (!justLoggedIn) return;
     greetedRef.current = true;
     sessionStorage.removeItem("auth:welcome");
+    if (params.has("code")) {
+      const url = new URL(window.location.href);
+      url.searchParams.delete("code");
+      window.history.replaceState({}, "", url.pathname + url.search);
+    }
     setShowGreeting(true);
   }, [user]);
 
