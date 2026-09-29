@@ -67,6 +67,11 @@ function Auth({ redirectAfterAuth }: AuthProps = {}) {
   );
   const [pending, setPending] = useState<"google" | "github" | null>(null);
 
+  // No preview, o app roda dentro de um iframe e o Google/GitHub bloqueiam
+  // OAuth em iframes (X-Frame-Options: DENY). Nesse caso abrimos o login em
+  // nova aba, onde o fluxo funciona normalmente.
+  const [isEmbedded] = useState(() => window.self !== window.top);
+
   useEffect(() => {
     if (!authLoading && isAuthenticated) {
       navigate(redirect, { replace: true });
@@ -76,6 +81,21 @@ function Auth({ redirectAfterAuth }: AuthProps = {}) {
   const handleOAuth = async (provider: "google" | "github") => {
     setPending(provider);
     try {
+      if (isEmbedded) {
+        // Recarrega o preview em nova aba, levando o usuário para /auth
+        // fora do iframe. O fluxo OAuth continua lá, em nível superior.
+        const popup = window.open(
+          `${window.location.origin}/auth?mode=${mode}&provider=${provider}`,
+          "_blank",
+        );
+        if (!popup) {
+          toast.error("Pop-up bloqueado", {
+            description: "Permita pop-ups para este site e tente novamente.",
+          });
+        }
+        setPending(null);
+        return;
+      }
       await signIn(provider, { redirectTo: redirect });
       // On success the browser is redirected away by the OAuth flow.
       setPending(null);
@@ -97,6 +117,24 @@ function Auth({ redirectAfterAuth }: AuthProps = {}) {
       setPending(null);
     }
   };
+
+  const [providerHint, setProviderHint] = useState<"google" | "github" | null>(
+    searchParams.get("provider") === "github"
+      ? "github"
+      : searchParams.get("provider") === "google"
+        ? "google"
+        : null,
+  );
+
+  // Aberto em nova aba com ?provider=X: dispara o fluxo OAuth automaticamente.
+  useEffect(() => {
+    if (!authLoading && providerHint && !isAuthenticated) {
+      const provider = providerHint;
+      setProviderHint(null);
+      void handleOAuth(provider);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [authLoading, providerHint, isAuthenticated]);
 
   const isGooglePending = pending === "google";
   const isGitHubPending = pending === "github";
