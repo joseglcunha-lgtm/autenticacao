@@ -1,13 +1,76 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/use-auth";
+import { api } from "@/convex/_generated/api";
 import { motion } from "framer-motion";
-import { LogOut, ShieldCheck } from "lucide-react";
+import { Github, LogOut, ShieldCheck } from "lucide-react";
+import { useQuery } from "convex/react";
 import { useNavigate } from "react-router";
+import { useEffect, useRef, useState } from "react";
+import { toast } from "sonner";
+
+const providerLabels: Record<string, string> = {
+  google: "Google",
+  github: "GitHub",
+};
+
+function GoogleIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} aria-hidden="true">
+      <path
+        d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.27-4.74 3.27-8.1Z"
+        fill="#4285F4"
+      />
+      <path
+        d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84A11 11 0 0 0 12 23Z"
+        fill="#34A853"
+      />
+      <path
+        d="M5.84 14.1a6.6 6.6 0 0 1 0-4.2V7.06H2.18a11 11 0 0 0 0 9.88l3.66-2.84Z"
+        fill="#FBBC05"
+      />
+      <path
+        d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15A11 11 0 0 0 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52Z"
+        fill="#EA4335"
+      />
+    </svg>
+  );
+}
+
+const providerIcons: Record<
+  string,
+  React.ComponentType<{ className?: string }>
+> = {
+  google: GoogleIcon,
+  github: Github,
+};
 
 export default function Dashboard() {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
+  const providerData = useQuery(api.authProviders.myProviders);
+  const greetedRef = useRef(false);
+  const [showGreeting, setShowGreeting] = useState(false);
+
+  // Mensagem de boas-vindas exibida uma vez, ao chegar autenticado.
+  useEffect(() => {
+    if (!user || greetedRef.current) return;
+    greetedRef.current = true;
+    setShowGreeting(true);
+    const provider = providerData?.providers?.[0];
+    toast.success("Obrigado por logar!!!", {
+      description: provider
+        ? `Você entrou via ${providerLabels[provider] ?? provider}.`
+        : "Sessão iniciada com sucesso.",
+    });
+  }, [user, providerData]);
+
+  // A faixa de boas-vindas desaparece após alguns segundos.
+  useEffect(() => {
+    if (!showGreeting) return;
+    const timer = setTimeout(() => setShowGreeting(false), 6000);
+    return () => clearTimeout(timer);
+  }, [showGreeting]);
 
   const handleSignOut = async () => {
     await signOut();
@@ -21,6 +84,11 @@ export default function Dashboard() {
     .join("")
     .toUpperCase();
 
+  const latestProvider = providerData?.providers?.[0];
+  const LatestProviderIcon = latestProvider
+    ? providerIcons[latestProvider]
+    : undefined;
+
   return (
     <main className="min-h-screen bg-background text-foreground">
       <div className="mx-auto flex w-full max-w-3xl flex-col px-6 py-16 md:py-24">
@@ -32,6 +100,33 @@ export default function Dashboard() {
           <p className="text-xs font-medium uppercase tracking-[0.25em] text-muted-foreground">
             Minimal Auth Flow
           </p>
+
+          {showGreeting && (
+            <motion.div
+              initial={{ opacity: 0, y: -6 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.4, ease: "easeOut" }}
+              className="mt-6 flex items-center gap-3 rounded-md border bg-muted/40 px-4 py-3"
+            >
+              {LatestProviderIcon ? (
+                <LatestProviderIcon className="size-4 shrink-0" />
+              ) : (
+                <ShieldCheck
+                  className="size-4 shrink-0 text-muted-foreground"
+                  strokeWidth={1.5}
+                />
+              )}
+              <p className="text-sm">
+                <span className="font-semibold">Obrigado por logar!!!</span>{" "}
+                <span className="text-muted-foreground">
+                  {latestProvider
+                    ? `Você entrou via ${providerLabels[latestProvider] ?? latestProvider}.`
+                    : "Sessão iniciada com sucesso."}
+                </span>
+              </p>
+            </motion.div>
+          )}
 
           <div className="mt-8 flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-center gap-4">
@@ -86,6 +181,18 @@ export default function Dashboard() {
                   <dt className="text-muted-foreground">E-mail</dt>
                   <dd className="text-right font-medium">
                     {user?.email ?? "—"}
+                  </dd>
+                </div>
+                <div className="flex justify-between gap-4 border-b pb-3">
+                  <dt className="text-muted-foreground">Login via</dt>
+                  <dd className="text-right font-medium">
+                    {providerData === undefined
+                      ? "—"
+                      : providerData.providers.length > 0
+                        ? providerData.providers
+                            .map((p) => providerLabels[p] ?? p)
+                            .join(", ")
+                        : "—"}
                   </dd>
                 </div>
                 <div className="flex justify-between gap-4">
