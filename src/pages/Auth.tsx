@@ -81,27 +81,43 @@ function Auth({ redirectAfterAuth }: AuthProps = {}) {
   const handleOAuth = async (provider: "google" | "github") => {
     setPending(provider);
     try {
-      if (isEmbedded) {
-        // Recarrega o preview em nova aba, levando o usuário para /auth
-        // fora do iframe. O fluxo OAuth continua lá, em nível superior.
-        sessionStorage.setItem("auth:welcome", "1");
-        const popup = window.open(
-          `${window.location.origin}/auth?mode=${mode}&provider=${provider}`,
-          "_blank",
-        );
-        if (!popup) {
-          toast.error("Pop-up bloqueado", {
-            description: "Permita pop-ups para este site e tente novamente.",
-          });
-        }
+      const result = (await signIn(provider, {
+        redirectTo: redirect,
+      })) as { redirect?: string } | undefined;
+
+      if (!result?.redirect) {
+        // Sem redirect: o cliente já concluiu o login localmente.
         setPending(null);
         return;
       }
-      await signIn(provider, { redirectTo: redirect });
+
       // Sinaliza ao dashboard para exibir a tela de boas-vindas.
       sessionStorage.setItem("auth:welcome", "1");
-      // On success the browser is redirected away by the OAuth flow.
-      setPending(null);
+      const target = result.redirect.toString();
+
+      if (isEmbedded) {
+        // Dentro do preview (iframe) o Google/GitHub bloqueiam o fluxo
+        // (X-Frame-Options). Com o clique do usuário navegamos a janela de
+        // topo; se o navegador impedir, um instante depois abrimos nova aba.
+        try {
+          window.top!.location.href = target;
+        } catch {
+          // Navegação de topo bloqueada: cai no fallback abaixo.
+        }
+        window.setTimeout(() => {
+          const popup = window.open(target, "_blank");
+          if (!popup) {
+            sessionStorage.removeItem("auth:welcome");
+            toast.error("Pop-up bloqueado", {
+              description: "Permita pop-ups para este site e tente novamente.",
+            });
+          }
+          setPending(null);
+        }, 1200);
+        return;
+      }
+
+      window.location.href = target;
     } catch (error) {
       sessionStorage.removeItem("auth:welcome");
       console.error(`${provider} sign-in error:`, error);
