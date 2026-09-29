@@ -43,7 +43,15 @@ VITE_CONVEX_URL=https://<seu-deploy>.convex.cloud
    > o backend), não no domínio do frontend. Descubra o seu com:
    > `bunx convex env list` (variável `SITE_URL` atual = domínio `convex.site`)
    > ou pela saída do `bunx convex dev`.
-5. Copie o **Client ID** e o **Client Secret**.
+5. **Tela de consentimento OAuth** (importante): apps recém-criados ficam em
+   modo **Testes**. Nesse modo o Google bloqueia com "Error 403: Access
+   blocked" qualquer conta que não esteja em *Usuários de teste*. Adicione o
+   e-mail Gmail que você usa para testar (ou publique o app em *In
+   production* — para os escopos de perfil básicos não é exigida verificação).
+6. Copie o **Client ID** e o **Client Secret**.
+
+> Erro 403 na tela do Google quase sempre é (a) chaves ausentes no deploy
+> Convex ou (b) conta fora da lista de usuários de teste.
 
 ---
 
