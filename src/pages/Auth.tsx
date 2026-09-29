@@ -81,11 +81,18 @@ function Auth({ redirectAfterAuth }: AuthProps = {}) {
       setPending(null);
     } catch (error) {
       console.error(`${provider} sign-in error:`, error);
+      const raw =
+        error instanceof Error
+          ? error.message
+          : "Erro inesperado ao iniciar o login.";
+      const looksLikeConfigIssue =
+        /AUTH_(GOOGLE|GITHUB)_(ID|SECRET)|client_?[Ii]d|clientSecret|Invalid client|bad request|500/i.test(
+          raw,
+        );
       toast.error("Não foi possível continuar", {
-        description:
-          error instanceof Error
-            ? error.message
-            : "Verifique a configuração do provedor e tente novamente.",
+        description: looksLikeConfigIssue
+          ? `${raw} — confira se as chaves do provedor estão configuradas no backend (veja SETUP.md).`
+          : raw,
       });
       setPending(null);
     }

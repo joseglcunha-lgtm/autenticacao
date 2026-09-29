@@ -35,8 +35,14 @@ VITE_CONVEX_URL=https://<seu-deploy>.convex.cloud
 2. Crie um projeto (ou use um existente) → **Criar credenciais → ID do cliente OAuth**.
 3. Tipo de aplicativo: **Aplicativo da Web**.
 4. Em **URIs de redirecionamento autorizados**, adicione:
-   - Desenvolvimento: `http://localhost:5173/api/auth/callback/google`
-   - Produção: `https://SEU-DOMINIO.com/api/auth/callback/google`
+   - Desenvolvimento: `https://SEU-DEPLOY.convex.site/api/auth/callback/google`
+   - Produção: pode usar a mesma URI dev; o callback é sempre no domínio do
+     Convex e não muda com a hospedagem do frontend
+
+   > O callback é sempre no domínio do **Convex** (quem troca o código OAuth é
+   > o backend), não no domínio do frontend. Descubra o seu com:
+   > `bunx convex env list` (variável `SITE_URL` atual = domínio `convex.site`)
+   > ou pela saída do `bunx convex dev`.
 5. Copie o **Client ID** e o **Client Secret**.
 
 ---
@@ -45,8 +51,8 @@ VITE_CONVEX_URL=https://<seu-deploy>.convex.cloud
 
 1. Acesse [GitHub → Developer settings → OAuth Apps](https://github.com/settings/developers) → **New OAuth App**.
 2. Preencha:
-   - **Homepage URL**: `http://localhost:5173` (e depois o domínio de produção)
-   - **Authorization callback URL**: `http://localhost:5173/api/auth/callback/github`
+   - **Homepage URL**: a URL do seu app (ex.: `http://localhost:5173`)
+   - **Authorization callback URL**: `https://SEU-DEPLOY.convex.site/api/auth/callback/github`
 3. Copie o **Client ID** e gere o **Client Secret**.
 
 ---
@@ -65,15 +71,24 @@ bunx convex env set AUTH_GITHUB_SECRET "xxxx"
 > Para produção, repita os comandos com `bunx convex env set --prod ...`
 > usando as credenciais criadas com o domínio de produção.
 
-Defina também a URL pública do site (usada nos redirects do OAuth):
+Defina também a **URL do app** (onde a interface roda). É para lá que o
+usuário volta depois de autenticar no provedor:
 
 ```bash
-bunx convex env set SITE_URL "http://localhost:5173"           # dev
-bunx convex env set --prod SITE_URL "https://SEU-DOMINIO.com"  # produção
+bunx convex env set SITE_URL "http://localhost:5173"                 # dev
+bunx convex env set --prod SITE_URL "https://SEU-APP.com"            # produção
 ```
 
-Os callbacks a registrar nos provedores seguem o padrão
-`{SITE_URL}/api/auth/callback/{google|github}`.
+> Importante: `SITE_URL` é a URL do **frontend** (Vite/preview), não a do
+> Convex. Se apontar para o domínio `convex.site`, o login até conclui, mas o
+> usuário cai numa página em branco no final.
+
+Resumo de quem é o quê:
+
+| Variável | Valor | Papel |
+| --- | --- | --- |
+| Callback nos provedores | `https://SEU-DEPLOY.convex.site/api/auth/callback/{google\|github}` | Recebe o código OAuth (backend) |
+| `SITE_URL` | URL do app (ex.: `http://localhost:5173`) | Destino após o login (frontend) |
 
 ---
 
@@ -109,8 +124,9 @@ pode ser servido pelo **Cloudflare Pages**.
    bunx convex env set --prod SITE_URL "https://minimal-auth-flow.pages.dev"
    ```
 
-4. Adicione `https://minimal-auth-flow.pages.dev/api/auth/callback/google` e
-   `.../callback/github` nas credenciais do Google/GitHub.
+4. Os callbacks dos provedores **não mudam** ao migrar de hospedagem: eles
+   apontam para o domínio do Convex (`...convex.site/api/auth/callback/...`).
+   Apenas garanta que `SITE_URL --prod` aponte para o domínio final do app.
 
 > **Nota sobre "API no Cloudflare"**: nesta versão 1 a API é o Convex
 > (endpoints `/api/auth/*` já inclusos). Se mais tarde você quiser mover a API
