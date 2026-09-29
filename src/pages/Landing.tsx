@@ -1,45 +1,46 @@
 import { useAuth } from "@/hooks/use-auth";
 import { motion } from "framer-motion";
-import { ArrowRight, Fingerprint, KeyRound, ShieldCheck } from "lucide-react";
+import { ArrowRight, Building2, Fingerprint, ShieldCheck } from "lucide-react";
 import { useNavigate } from "react-router";
 
 const features = [
   {
     icon: Fingerprint,
-    title: "Uma identidade",
+    title: "Cadastro sem formulário",
     description:
-      "Entre com a conta que você já tem. Sem senhas para lembrar, sem formulários de cadastro.",
+      "A conta nasce do primeiro login social. Sem senhas para criar, guardar ou redefinir.",
   },
   {
     icon: ShieldCheck,
     title: "Sessões seguras",
     description:
-      "Tokens assinados e cookies httpOnly cuidam da sua sessão do início ao fim.",
+      "Tokens assinados e cookies httpOnly protegem cada sessão, do primeiro acesso ao logout.",
   },
   {
-    icon: KeyRound,
-    title: "Pronto para crescer",
+    icon: Building2,
+    title: "Feito para empresas",
     description:
-      "Google e GitHub hoje. Novos provedores podem ser adicionados sem mudar o seu fluxo.",
+      "Uma base de autenticação pronta para times que querem lançar produtos — não construir login.",
   },
 ];
 
 const steps = [
   {
     number: "01",
-    title: "Escolha o provedor",
-    description: "Google ou GitHub — dois toques e o fluxo começa.",
+    title: "Escolha um provedor",
+    description: "O usuário seleciona Google ou GitHub para continuar.",
   },
   {
     number: "02",
     title: "Autorize o acesso",
     description:
-      "A autenticação acontece no provedor. Nenhum dado de senha passa por aqui.",
+      "A confirmação acontece na conta do provedor. Nenhuma senha passa pelo produto.",
   },
   {
     number: "03",
-    title: "Entre direto",
-    description: "Você volta para a plataforma já autenticado.",
+    title: "Entre ou cadastre-se",
+    description:
+      "No primeiro acesso a conta é criada; nos seguintes, o login é imediato.",
   },
 ];
 
@@ -69,8 +70,16 @@ export default function Landing() {
   const navigate = useNavigate();
   const { isLoading, isAuthenticated } = useAuth();
 
-  const ctaLabel = isLoading ? "..." : isAuthenticated ? "Ir para o painel" : "Entrar";
-  const ctaTarget = isAuthenticated ? "/dashboard" : "/auth";
+  const primaryLabel = isLoading
+    ? "..."
+    : isAuthenticated
+      ? "Ir para o painel"
+      : "Criar conta";
+  const primaryTarget = isAuthenticated ? "/dashboard" : "/auth?mode=signup";
+  const secondaryTarget = isAuthenticated
+    ? "#como-funciona"
+    : "/auth?mode=login";
+  const secondaryLabel = isAuthenticated ? "Ver como funciona" : "Entrar";
 
   return (
     <div className="flex min-h-screen flex-col bg-background text-foreground">
@@ -82,7 +91,7 @@ export default function Landing() {
             onClick={() => navigate("/")}
             className="cursor-pointer text-sm font-semibold tracking-tight"
           >
-            Authly<span className="text-muted-foreground">.</span>
+            Minimal Auth Flow
           </button>
           <nav className="hidden items-center gap-8 text-sm text-muted-foreground md:flex">
             <a href="#como-funciona" className="transition-colors hover:text-foreground">
@@ -94,17 +103,21 @@ export default function Landing() {
           </nav>
           <button
             type="button"
-            onClick={() => navigate(ctaTarget)}
+            onClick={() =>
+              navigate(isAuthenticated ? "/dashboard" : "/auth?mode=login")
+            }
             className="cursor-pointer text-sm font-medium transition-colors hover:text-foreground md:hidden"
           >
-            {ctaLabel}
+            {isAuthenticated ? "Painel" : "Entrar"}
           </button>
           <button
             type="button"
-            onClick={() => navigate(ctaTarget)}
+            onClick={() =>
+              navigate(isAuthenticated ? "/dashboard" : "/auth?mode=login")
+            }
             className="hidden h-9 cursor-pointer items-center gap-2 rounded-md border px-4 text-sm font-medium transition-colors hover:bg-muted md:inline-flex"
           >
-            {ctaLabel}
+            {isAuthenticated ? "Ir para o painel" : "Entrar"}
             <ArrowRight className="size-4" />
           </button>
         </div>
@@ -119,7 +132,7 @@ export default function Landing() {
             transition={{ duration: 0.6 }}
             className="text-xs font-medium uppercase tracking-[0.3em] text-muted-foreground"
           >
-            Autenticação sem atrito
+            Autenticação para empresas
           </motion.p>
           <motion.h1
             initial={{ opacity: 0, y: 16 }}
@@ -127,8 +140,7 @@ export default function Landing() {
             transition={{ duration: 0.6, delay: 0.1, ease: "easeOut" }}
             className="mt-6 max-w-2xl text-4xl font-bold tracking-tight md:text-6xl"
           >
-            Entre com o Google
-            <br />o GitHub.
+            Cadastro e login com Google ou GitHub.
           </motion.h1>
           <motion.p
             initial={{ opacity: 0, y: 16 }}
@@ -136,8 +148,9 @@ export default function Landing() {
             transition={{ duration: 0.6, delay: 0.2, ease: "easeOut" }}
             className="mt-6 max-w-xl text-base leading-7 text-muted-foreground"
           >
-            Um autenticador simples para a web: dois provedores, uma sessão
-            segura e nenhuma senha para gerenciar.
+            Minimal Auth Flow é a camada de autenticação para o seu produto:
+            seus usuários criam conta no primeiro acesso e entram nos
+            seguintes — sem senha e sem atrito.
           </motion.p>
           <motion.div
             initial={{ opacity: 0, y: 16 }}
@@ -147,18 +160,28 @@ export default function Landing() {
           >
             <button
               type="button"
-              onClick={() => navigate(ctaTarget)}
+              onClick={() => navigate(primaryTarget)}
               className="inline-flex h-11 cursor-pointer items-center justify-center gap-2 rounded-md bg-primary px-6 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
             >
-              {ctaLabel}
+              {primaryLabel}
               <ArrowRight className="size-4" />
             </button>
-            <a
-              href="#como-funciona"
-              className="inline-flex h-11 items-center justify-center rounded-md border px-6 text-sm font-medium transition-colors hover:bg-muted"
-            >
-              Ver como funciona
-            </a>
+            {secondaryTarget.startsWith("#") ? (
+              <a
+                href={secondaryTarget}
+                className="inline-flex h-11 items-center justify-center rounded-md border px-6 text-sm font-medium transition-colors hover:bg-muted"
+              >
+                {secondaryLabel}
+              </a>
+            ) : (
+              <button
+                type="button"
+                onClick={() => navigate(secondaryTarget)}
+                className="inline-flex h-11 items-center justify-center rounded-md border px-6 text-sm font-medium transition-colors hover:bg-muted"
+              >
+                {secondaryLabel}
+              </button>
+            )}
           </motion.div>
         </section>
 
@@ -238,19 +261,31 @@ export default function Landing() {
         <section className="mx-auto flex w-full max-w-5xl flex-col items-center px-6 py-28 text-center">
           <FadeIn>
             <h2 className="text-3xl font-bold tracking-tight md:text-4xl">
-              Pronto para entrar?
+              Autenticação pronta para o seu produto.
             </h2>
             <p className="mx-auto mt-4 max-w-md text-sm leading-6 text-muted-foreground">
-              Leva menos de um minuto. Escolha um provedor e comece a usar.
+              Adicione cadastro e login com Google e GitHub hoje. Configuração
+              única, experiência imediata.
             </p>
-            <button
-              type="button"
-              onClick={() => navigate(ctaTarget)}
-              className="mt-10 inline-flex h-11 cursor-pointer items-center justify-center gap-2 rounded-md bg-primary px-8 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
-            >
-              {ctaLabel}
-              <ArrowRight className="size-4" />
-            </button>
+            <div className="mt-10 flex flex-col items-center gap-3 sm:flex-row">
+              <button
+                type="button"
+                onClick={() => navigate(primaryTarget)}
+                className="inline-flex h-11 cursor-pointer items-center justify-center gap-2 rounded-md bg-primary px-8 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+              >
+                {primaryLabel}
+                <ArrowRight className="size-4" />
+              </button>
+              {!isAuthenticated && (
+                <button
+                  type="button"
+                  onClick={() => navigate("/auth?mode=login")}
+                  className="inline-flex h-11 items-center justify-center rounded-md border px-8 text-sm font-medium transition-colors hover:bg-muted"
+                >
+                  Entrar
+                </button>
+              )}
+            </div>
           </FadeIn>
         </section>
       </main>
@@ -258,10 +293,8 @@ export default function Landing() {
       {/* Footer */}
       <footer className="border-t">
         <div className="mx-auto flex w-full max-w-5xl flex-col items-center justify-between gap-4 px-6 py-8 text-sm text-muted-foreground sm:flex-row">
-          <span>
-            Authly<span className="ml-0.5">.</span>
-          </span>
-          <span>Login social com Google e GitHub</span>
+          <span>Minimal Auth Flow</span>
+          <span>Cadastro e login social para empresas</span>
         </div>
       </footer>
     </div>

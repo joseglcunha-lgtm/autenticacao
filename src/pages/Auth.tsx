@@ -62,6 +62,9 @@ function Auth({ redirectAfterAuth }: AuthProps = {}) {
     searchParams.get("returnTo"),
     redirectAfterAuth,
   );
+  const [mode, setMode] = useState<"login" | "signup">(
+    searchParams.get("mode") === "signup" ? "signup" : "login",
+  );
   const [pending, setPending] = useState<"google" | "github" | null>(null);
 
   useEffect(() => {
@@ -78,7 +81,7 @@ function Auth({ redirectAfterAuth }: AuthProps = {}) {
       setPending(null);
     } catch (error) {
       console.error(`${provider} sign-in error:`, error);
-      toast.error("Não foi possível entrar", {
+      toast.error("Não foi possível continuar", {
         description:
           error instanceof Error
             ? error.message
@@ -102,17 +105,40 @@ function Auth({ redirectAfterAuth }: AuthProps = {}) {
         >
           <div className="text-center">
             <p className="text-xs font-medium uppercase tracking-[0.25em] text-muted-foreground">
-              Authly
+              Minimal Auth Flow
             </p>
             <h1 className="mt-6 text-2xl font-bold tracking-tight text-foreground">
-              Entrar na plataforma
+              {mode === "signup" ? "Criar sua conta" : "Entrar na plataforma"}
             </h1>
             <p className="mt-2 text-sm leading-6 text-muted-foreground">
-              Use sua conta do Google ou do GitHub para continuar.
+              {mode === "signup"
+                ? "Comece com a conta do Google ou do GitHub. Leva menos de um minuto."
+                : "Acesse com a conta do Google ou do GitHub que você já usa."}
             </p>
           </div>
 
-          <div className="mt-10 space-y-3">
+          {/* Alternância Entrar / Criar conta */}
+          <div className="mt-8 grid grid-cols-2 gap-1 rounded-md border p-1" role="tablist">
+            {(["login", "signup"] as const).map((option) => (
+              <button
+                key={option}
+                type="button"
+                role="tab"
+                aria-selected={mode === option}
+                onClick={() => setMode(option)}
+                className={
+                  "h-8 cursor-pointer rounded-sm text-sm font-medium transition-colors " +
+                  (mode === option
+                    ? "bg-muted text-foreground"
+                    : "text-muted-foreground hover:text-foreground")
+                }
+              >
+                {option === "login" ? "Entrar" : "Criar conta"}
+              </button>
+            ))}
+          </div>
+
+          <div className="mt-6 space-y-3">
             <Button
               type="button"
               variant="outline"
@@ -125,7 +151,9 @@ function Auth({ redirectAfterAuth }: AuthProps = {}) {
               ) : (
                 <GoogleIcon className="size-4" />
               )}
-              Continuar com Google
+              {mode === "signup"
+                ? "Cadastrar com Google"
+                : "Continuar com Google"}
             </Button>
 
             <Button
@@ -140,13 +168,16 @@ function Auth({ redirectAfterAuth }: AuthProps = {}) {
               ) : (
                 <GitHubIcon className="size-4" />
               )}
-              Continuar com GitHub
+              {mode === "signup"
+                ? "Cadastrar com GitHub"
+                : "Continuar com GitHub"}
             </Button>
           </div>
 
           <p className="mt-10 border-t pt-6 text-center text-xs leading-5 text-muted-foreground">
-            Sem senha e sem cadastro manual: a autenticação é feita pelo
-            provedor escolhido.
+            {mode === "signup"
+              ? "A conta é criada no primeiro login. Nenhuma senha para memorizar."
+              : "Não tem conta? Use “Criar conta” — o primeiro login cria uma automaticamente."}
           </p>
         </motion.div>
       </div>

@@ -30,7 +30,7 @@ export default function Dashboard() {
           transition={{ duration: 0.5, ease: "easeOut" }}
         >
           <p className="text-xs font-medium uppercase tracking-[0.25em] text-muted-foreground">
-            Painel
+            Minimal Auth Flow
           </p>
 
           <div className="mt-8 flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">

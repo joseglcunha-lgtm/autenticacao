@@ -1,4 +1,4 @@
-# Authly — Guia de configuração
+# Minimal Auth Flow — Guia de configuração
 
 Autenticador web com **login social (Google + GitHub)**. Frontend em React +
 Vite, backend/API em **Convex** (hospedável junto do frontend no **Cloudflare
@@ -92,7 +92,7 @@ pode ser servido pelo **Cloudflare Pages**.
 
    ```bash
    bunx wrangler login
-   bunx wrangler pages deploy dist --project-name authly
+   bunx wrangler pages deploy dist --project-name minimal-auth-flow
    ```
 
    Ou conecte o repositório em
@@ -106,10 +106,10 @@ pode ser servido pelo **Cloudflare Pages**.
 3. Aponte o Convex para o domínio final:
 
    ```bash
-   bunx convex env set --prod SITE_URL "https://authly.pages.dev"
+   bunx convex env set --prod SITE_URL "https://minimal-auth-flow.pages.dev"
    ```
 
-4. Adicione `https://authly.pages.dev/api/auth/callback/google` e
+4. Adicione `https://minimal-auth-flow.pages.dev/api/auth/callback/google` e
    `.../callback/github` nas credenciais do Google/GitHub.
 
 > **Nota sobre "API no Cloudflare"**: nesta versão 1 a API é o Convex
