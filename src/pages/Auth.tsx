@@ -227,6 +227,37 @@ function Auth({ redirectAfterAuth }: AuthProps = {}) {
               ? "A conta é criada no primeiro login. Nenhuma senha para memorizar."
               : "Não tem conta? Use “Criar conta” — o primeiro login cria uma automaticamente."}
           </p>
+
+          {/* Diagnóstico de configuração (dev): ajuda a descobrir a URL do app
+              para definir SITE_URL no Convex (SETUP.md, seção 4). */}
+          <details className="mt-6 text-xs text-muted-foreground">
+            <summary className="cursor-pointer select-none">
+              Diagnóstico de configuração
+            </summary>
+            <div className="mt-3 space-y-2 rounded-md border bg-muted/40 p-3">
+              <p className="leading-5">
+                Este é o endereço do app. Ele deve estar salvo como SITE_URL no
+                backend para o login voltar para cá:
+              </p>
+              <div className="flex items-center gap-2">
+                <code className="min-w-0 flex-1 truncate rounded-sm border bg-background px-2 py-1 text-[11px]">
+                  {window.location.origin}
+                </code>
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="h-7 shrink-0 cursor-pointer px-2 text-[11px]"
+                  onClick={() => {
+                    void navigator.clipboard
+                      .writeText(window.location.origin)
+                      .then(() => toast.success("URL copiada"));
+                  }}
+                >
+                  Copiar
+                </Button>
+              </div>
+            </div>
+          </details>
         </motion.div>
       </div>
     </main>
